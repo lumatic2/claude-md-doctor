@@ -58,7 +58,7 @@ Claude defaults to **Quick Check** (top 3 issues, ~3 min). Say "full audit" for 
 ### Full Audit (Steps 1–8, adds:)
 | Check | What it catches |
 |-------|----------------|
-| Hook cross-reference | Enforcement rules with no hook → advisory-only, not enforced |
+| Hook cross-reference | Enforcement rules with no hook → advisory-only, not enforced (use [hook-manager](https://github.com/lumatic2/hook-manager) to fix) |
 | Redundant rules | Rules already covered by a hook → safe to prune |
 | Permissions audit | Overly broad allow-lists silently overriding safety rules; missing permissions causing constant prompts |
 | Model pin check | Pinned model is retired or mismatched with CLAUDE.md behavior assumptions |
@@ -106,6 +106,24 @@ They complement each other. Run `claude-md-improver` to check if your content is
 - Critical instructions appear early
 
 **Tip:** Press `#` during any Claude Code session to have Claude auto-incorporate session learnings back into your `CLAUDE.md`. Use `CLAUDE.local.md` for personal preferences you don't want to share with your team.
+
+---
+
+## Pair with hook-manager
+
+`claude-md-doctor` finds the gaps. [`hook-manager`](https://github.com/lumatic2/hook-manager) fills them.
+
+The Full Audit flags enforcement rules that have no hook backing them — rules like "never push to main" or "run tests before commit" that Claude *tries* to follow but can miss under context pressure. `hook-manager` turns those into deterministic shell hooks in `settings.json`.
+
+Typical workflow:
+
+```
+/claude-md-doctor          # finds: "never force push" — advisory-only, no hook
+/hook-manager              # adds: PreToolUse/Bash hook that blocks git push --force
+/claude-md-doctor          # confirms: rule now redundant, safe to remove from CLAUDE.md
+```
+
+The doctor also reads your existing hooks to detect the reverse: rules in `CLAUDE.md` that are already covered by a hook — those are safe to prune.
 
 ---
 
