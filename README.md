@@ -42,10 +42,11 @@ Claude defaults to **Quick Check** (top 3 issues, ~3 min). Say "full audit" for 
 
 ## What it checks
 
-### Quick Check (Steps 1–3)
+### Quick Check (Steps 1–4, ~3 min)
 | Check | What it catches |
 |-------|----------------|
-| File length | Rules dropped by context compression (>200 lines) |
+| **Instruction budget** | Slot count (not just line count) — Claude holds ~100 usable instruction slots; overloaded files silently drop tail rules |
+| File length | Hard line-count guard — >300 lines triggers context compression regardless of slot count |
 | Signal-to-noise | Rules Claude would follow anyway — dead weight |
 | Rule specificity | Vague rules two people would implement differently |
 | Rationale coverage | Non-obvious rules missing a one-line "why" |
@@ -59,10 +60,16 @@ Claude defaults to **Quick Check** (top 3 issues, ~3 min). Say "full audit" for 
 |-------|----------------|
 | Hook cross-reference | Enforcement rules with no hook → advisory-only, not enforced |
 | Redundant rules | Rules already covered by a hook → safe to prune |
-| `@import` validation | Broken import paths that silently fail |
+| Permissions audit | Overly broad allow-lists silently overriding safety rules; missing permissions causing constant prompts |
+| Model pin check | Pinned model is retired or mismatched with CLAUDE.md behavior assumptions |
+| `@import` validation | Broken import paths that silently fail; imported files audited for slot budget and contradictions |
 | **Removal test** | For each rule: would removing it cause Claude to make a mistake? |
 | **Behavioral spot-check** | Rules Claude would follow by default — documenting defaults, not changing behavior |
 | External agent review | Independent audit from a fresh Claude instance with no context |
+
+### Migration Wizard (triggered when file stays >200 lines after edits)
+
+Proposes a modular split: cross-cutting rules stay in `CLAUDE.md`, directory- or filetype-scoped rules move to `.claude/rules/` files with `paths:` frontmatter so they only load when relevant.
 
 Scoring is on a 0–100 rubric across four sections: Size & Focus, Rule Quality, Structure & Completeness, Advanced Practices. See [`references/rubric.md`](references/rubric.md) for the full criteria.
 

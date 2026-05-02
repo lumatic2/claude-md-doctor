@@ -36,6 +36,8 @@ Default to **Quick Check** if the user gives no signal either way. Offer to go d
 
 **Always announce the chosen mode before Step 1** — say "Running Quick Check" or "Running Full Audit" so the user knows what to expect.
 
+**Output language** — match the conversation language. Default to Korean if mixed.
+
 If no root or global CLAUDE.md is found → skip to **[No File Found](#no-file-found)** at the bottom. (Quick Check does not scan subdirectories — a subdirectory-only repo will appear empty in this mode. Tell the user: "No root-level CLAUDE.md found. Run Full Audit to check subdirectories.")
 
 ---
@@ -80,18 +82,25 @@ Tell the user which files you found and what scope each covers (global / project
 
 Apply the rubric from Step 2 to each CLAUDE.md.
 
-Lead with a **checklist**, not a number — the findings are more actionable than the aggregate score:
+Lead with a **checklist**, not a number — the findings are more actionable than the aggregate score.
+
+Use this exact format — one item per line, never concatenate:
 
 ```
-### ~/.claude/CLAUDE.md — Grade B
+### ~/CLAUDE.md — Grade B (80/100 ±5–10 pts)
 
-Objective:  [✓] length OK  [✗] multi-step procedure (line 34)  [✓] @imports resolve
-Subjective: [~] rationale ~50%  [~] 2 vague rules  [✓] organization OK
+Objective checks:
+  ✓  98 lines — within budget (≤150)
+  ✗  multi-step procedure — L34 → move to scripts/deploy.sh
+  ✓  @imports: 2/2 resolve
 
-Score: 80/100 (B) — rough quartile, not precise (subjective criteria ±5–10 pts)
-Top 3 issues: [with line numbers]
-Top 3 strengths: [with line numbers]
+Subjective checks:
+  ~  rationale coverage ~50% — L12, L24, L45 missing WHY
+  ~  2 vague rules — L8 "handle errors properly", L31 "use clean code"
+  ✓  organization — critical rules appear early
 ```
+
+Score line at the bottom: `Score: 80/100 (B) — treat as rough quartile, not exact`
 
 **@import validation:** For every `@path/to/file` found in the CLAUDE.md:
 1. Attempt to Read the target path. Resolve relative paths from the directory containing the CLAUDE.md file. Flag failures as broken imports — they silently do nothing at runtime.
@@ -103,24 +112,23 @@ Present scorecards for all files before moving to recommendations.
 
 Order by impact × effort:
 
-**P0 — Fix now** (hurts Claude's effectiveness today):
-- File over 200 lines → rules at the end get dropped by context compression
-- Rules that contradict each other across files
-- Rules so vague two people would implement them differently
+Use this exact table format — one row per issue, sorted P0 → P1 → P2:
 
-**P1 — High value** (meaningfully improve adherence):
-- Non-obvious rules without a one-line "why"
-- Enforcement rules with no hook backing them (advisory-only → flag clearly)
-- Multi-step procedures → skills or scripts
-- Stale facts embedded as static text
+```
+PRI  LINE   ISSUE                              FIX
+───  ─────  ─────────────────────────────────  ──────────────────────────────────
+P0   L34    multi-step deploy procedure        move to scripts/deploy.sh
+P0   L67    contradicts global rule (L12)      remove — global wins
+P1   L24    "자동 트리거 금지" no rationale       add: "billing + rollback risk"
+P1   L45    "never push" no hook               add PreToolUse on git push
+P1   L88    stale API version (v3→v5)          remove or use @api-docs.md
+P2   L2-3   HTML comments waste tokens         delete
+P2   —      no Gotchas section                 add env vars, known quirks
+```
 
-**P2 — Polish:**
-- Reorder sections (critical rules first)
-- Extract large content to `@imports`
-- Add missing sections (key commands, gotchas)
-- Split global vs project concerns
-
-For each item: specific line/section, what to change, expected improvement.
+P0 = hurts effectiveness today (contradictions, 200+ lines, rules too vague to follow)
+P1 = meaningfully improves adherence (missing rationale, unhooked rules, procedures, stale facts)
+P2 = polish (reorder, @imports, missing sections, global/project split)
 
 ### Step 5: Apply Changes
 
@@ -195,11 +203,21 @@ If no settings.json found at either path: note this and skip the cross-reference
 
 Extract hooks from the `"hooks"` key. Then identify **enforcement rules** in the CLAUDE.md files — rules containing "always", "never", "must", "before", "after", or Korean equivalents "항상", "반드시", "금지", "절대".
 
+Use this table format:
+
 ```
-Hooks: PreToolUse/Bash → run_tests.sh  |  PostToolUse/Write → lint.sh
-Rules: "Run tests before commit" (L23)  |  "Lint after edits" (L31)  |  "Never push to main" (L45)
-Redundant → confirm and prune: L23 ↔ PreToolUse, L31 ↔ PostToolUse
-Advisory-only (no hook): L45 — add PreToolUse on `git push`, or accept best-effort
+Hook Cross-Reference
+
+HOOKS FOUND
+  PreToolUse  / Bash  → scripts/run_tests.sh
+  PostToolUse / Write → scripts/lint.sh
+
+ENFORCEMENT RULES vs HOOKS
+  STATUS       LINE  RULE                      HOOK MATCH
+  ──────────── ───── ──────────────────────── ──────────────────────
+  ✓ redundant  L23   "run tests before commit" PreToolUse/Bash ← safe to remove from CLAUDE.md
+  ✓ redundant  L31   "lint after edits"        PostToolUse/Write ← safe to remove
+  ✗ advisory   L45   "never push to main"      none → add hook or accept best-effort
 ```
 
 Don't auto-decide the mapping. Surface it and let the user confirm.
