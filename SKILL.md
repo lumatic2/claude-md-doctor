@@ -142,25 +142,61 @@ Show a brief summary: what was removed, added, reorganized.
 
 **Tip to share after edits:** During any Claude Code session, press `#` to have Claude auto-incorporate session learnings back into CLAUDE.md. For personal preferences that shouldn't be shared with the team, use `CLAUDE.local.md` (add to `.gitignore`).
 
+#### If the file is still over 200 lines after edits — offer the Migration Wizard
+
+Only trigger this if the post-edit file length is still > 200 lines. Do not run it by default.
+
+Say: *"The file is still [N] lines. Want me to propose a modular split? I'll map rules to `.claude/rules/` files with path scoping so CLAUDE.md becomes the lightweight anchor."*
+
+If the user agrees, do the following:
+
+1. **Group rules by scope** — scan each rule and classify:
+   - Applies only to specific file types (`.py`, `.ts`, `*.test.*`) → candidate for `paths:`-scoped rule file
+   - Applies only in specific directories (`src/`, `scripts/`) → candidate for subdirectory CLAUDE.md
+   - Applies everywhere, always → stays in root CLAUDE.md
+
+2. **Propose the split** (don't apply yet):
+   ```
+   Proposed architecture:
+   
+   CLAUDE.md (keep — ~60 lines)
+     → Tech stack, key commands, gotchas, critical cross-cutting rules
+   
+   .claude/rules/python.md  (extract — 18 rules)
+     paths: ['**/*.py', 'tests/**']
+     → Python-specific conventions, pytest patterns
+   
+   .claude/rules/frontend.md  (extract — 12 rules)
+     paths: ['src/components/**', '**/*.tsx']
+     → React conventions, styling rules
+   
+   scripts/deploy.sh  (extract — 1 procedure)
+     → The 6-step deploy procedure currently on lines 134–145
+   ```
+
+3. Ask: "Apply this split?" — only edit files on explicit confirmation. Create the `.claude/rules/` files with proper YAML frontmatter (`paths:` key), then trim root CLAUDE.md to the anchor content.
+
 ---
 
 ## Full Audit Only: Steps 6–8
 
 Only run these steps in Full Audit mode, or if the user explicitly asks for them.
 
-### Step 6: Hook Cross-Reference
+### Step 6: Config System Audit
 
-**What are hooks?** Claude Code hooks are shell commands that run automatically on events (e.g., before every Bash tool call, after every file write). Unlike CLAUDE.md rules — which Claude tries to follow but may miss under context pressure — hooks are deterministic. If a hook exists for a behavior, the CLAUDE.md rule is redundant and can be safely pruned.
+CLAUDE.md is only one layer of the Claude Code config system. The other layers — hooks, permissions, model selection — interact with CLAUDE.md rules and often make them redundant or reveal gaps. Audit all three together.
 
 Read these files with the Read tool (do NOT use shell commands):
-- `~/.claude/settings.json` (global hooks)
-- `.claude/settings.json` (project hooks, if present)
+- `~/.claude/settings.json` (global config)
+- `.claude/settings.json` (project config, if present)
 
-Extract hooks from the `"hooks"` key. List them: event type, matcher, and what command runs.
+If no settings.json found at either path: note this and skip the cross-reference sections below. Suggest creating `.claude/settings.json` to unlock deterministic enforcement.
 
-Then identify **enforcement rules** in the CLAUDE.md files — rules containing words like "always", "never", "must", "before", "after", "항상", "반드시", "금지", "절대".
+#### 6a: Hook Cross-Reference
 
-Present the cross-reference clearly and ask the user to confirm the mapping:
+**What are hooks?** Shell commands that run automatically on Claude Code events (e.g., before every Bash call, after every file write). Unlike CLAUDE.md rules — which Claude may miss under context pressure — hooks are deterministic.
+
+Extract hooks from the `"hooks"` key. Then identify **enforcement rules** in the CLAUDE.md files — rules containing "always", "never", "must", "before", "after", or Korean equivalents "항상", "반드시", "금지", "절대".
 
 ```
 Hooks found:
@@ -172,17 +208,42 @@ Enforcement rules in CLAUDE.md:
 - "Lint after file edits" (line 31)
 - "Never push directly to main" (line 45)
 
-Likely redundant (hook probably covers it):
-- Line 23 ↔ PreToolUse hook — confirm and remove from CLAUDE.md?
-- Line 31 ↔ PostToolUse hook — confirm and remove from CLAUDE.md?
+Redundant (hook covers it — safe to prune from CLAUDE.md):
+- Line 23 ↔ PreToolUse hook
+- Line 31 ↔ PostToolUse hook
 
-Advisory-only (no hook backing it):
+Advisory-only (no hook — best-effort only):
 - Line 45: no hook found. Add a PreToolUse hook on `git push`, or accept best-effort.
 ```
 
 Don't auto-decide the mapping. Surface it and let the user confirm.
 
-If no settings.json found: note this and skip the cross-reference.
+#### 6b: Permissions Audit
+
+Extract the `"permissions"` key (or `"allow"` / `"deny"` depending on settings version). Check:
+
+- **Overly broad allow-lists** — `Bash(*)` or `*` means no guardrails. Flag if the CLAUDE.md has safety rules that a broad permission silently overrides.
+- **Overly restrictive deny-lists** — blocks that contradict documented workflows in CLAUDE.md (e.g., `git push` blocked but CLAUDE.md documents a deploy flow that requires it).
+- **Missing permissions** — CLAUDE.md mentions tools or commands but no permission entry exists; Claude will prompt on every use, defeating automation.
+
+Report as:
+```
+Permissions:
+- Allow: Bash(git *), Read(*), Write(src/**)
+- Deny: Bash(rm -rf *)
+
+Observations:
+- CLAUDE.md documents deploy workflow using `npm publish` — not in allow-list (will prompt every run)
+- No deny on `git push --force` — CLAUDE.md says "never force push" but nothing enforces it
+```
+
+#### 6c: Model Setting
+
+Check if a model is pinned in settings.json (`"model"` key). If yes:
+- Is the pinned model still current? (Flag if it's a retired or legacy model ID.)
+- Does CLAUDE.md reference model-specific behavior that assumes a different model?
+
+If no model is pinned: note that Claude will use the default, which changes over time — acceptable for most projects, worth pinning if behavior consistency matters.
 
 ### Step 7: External Audit (Optional)
 

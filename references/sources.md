@@ -50,6 +50,7 @@ Each claim in the rubric links to one or more of these.
 |-------|--------|
 | ≤200 lines recommended max | Official docs (memory loading behavior) |
 | ~150 instructions total capacity | Official docs: system prompt uses ~50, leaving ~100–150 |
+| "instruction slot" framing | HumanLayer blog + community synthesis — a slot = one discrete constraint Claude must hold in working memory |
 | HumanLayer's own file: <60 lines | HumanLayer blog |
 | Context compression drops late content | Dev.to post + inferred from official compaction docs |
 | Max 5-hop import depth | Official docs |

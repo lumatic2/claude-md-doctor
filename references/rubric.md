@@ -7,11 +7,26 @@ Higher scores = more effective instructions.
 
 ## Section 1: Size & Focus (25 points)
 
-### 1.1 File length (10 pts)
-- 10 pts: ≤ 150 lines
-- 7 pts: 151–200 lines
-- 4 pts: 201–300 lines
-- 0 pts: > 300 lines (severe — rules at the end get dropped by context compression)
+### 1.1 Instruction Budget (10 pts)
+
+**What is the instruction budget?**
+Claude Code's system prompt consumes ~50 instruction slots before your CLAUDE.md is even read. The total capacity is roughly 150 slots, leaving ~100 usable slots for your instructions. A "slot" is not a line — it's one discrete constraint Claude must hold in working memory (a rule, a prohibition, a workflow step, a fact).
+
+**How to count:** Scan each section. Count distinct things Claude must remember and act on — not headers, comments, or rationale text. A five-line code block that illustrates one rule = 1 slot. A one-line "always use pnpm" = 1 slot.
+
+| Budget used | Score | What it means |
+|---|---|---|
+| ≤ 60 slots | 10 pts | Tight — every slot is load-bearing |
+| 61–90 slots | 7 pts | Healthy — minor pruning opportunity |
+| 91–110 slots | 4 pts | Crowded — low-priority rules are competing with critical ones |
+| > 110 slots | 0 pts | Overloaded — Claude will silently deprioritize tail instructions |
+
+**Hard line-count guard (independent check):**
+Even a low slot count can be dangerous if the file is physically long — context compression drops late content regardless of importance.
+- > 300 lines: auto-deduct 5 pts (compression guarantee)
+- > 400 lines: red flag (see Quick Red Flags)
+
+**Report both:** slot estimate + line count. Flag when they diverge (e.g., 80 lines but 95 slots = very dense, high compression risk).
 
 ### 1.2 Signal-to-noise ratio (10 pts)
 For each rule, ask: "Would Claude do the wrong thing without this?" Rules that don't change behavior are noise.
@@ -169,6 +184,7 @@ Read 5 random rules. For each: if you removed it, would Claude do something diff
 These are severe enough to cap the grade regardless of other scores:
 
 - [ ] File > 400 lines (context bloat guarantee)
+- [ ] Instruction Budget > 110 slots (silent deprioritization near-certain)
 - [ ] Two rules that directly contradict each other
 - [ ] Instructions reference files or tools that don't exist
 - [ ] Security-sensitive information (tokens, passwords) in plain text
