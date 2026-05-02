@@ -46,7 +46,9 @@ If no CLAUDE.md is found at all → skip to **[No File Found](#no-file-found)** 
 
 Use the Read and Glob tools — do NOT use shell commands like `find`, `ls`, or `cat`. These are unreliable across platforms (Windows/Mac/Linux).
 
-**If the user provided a path in their message** (absolute or relative), use that as the project root. Do not fall back to the current working directory — the skill may be invoked from a different directory than the target project.
+**Resolve the project root:**
+- If the user provided a path (absolute or relative), use that — do not ignore it in favor of the current working directory.
+- If no path was provided, use the current working directory as the project root.
 
 **Tell the user the resolved root immediately:** "Scanning project root: `{resolved path}`"
 
@@ -98,7 +100,7 @@ Top 3 issues: [with line numbers]
 Top 3 strengths: [with line numbers]
 ```
 
-**@import validation:** For every `@path/to/file` found in the CLAUDE.md, attempt to Read the target path. Flag any that fail as broken imports — they silently do nothing at runtime.
+**@import validation:** For every `@path/to/file` found in the CLAUDE.md, attempt to Read the target path. Resolve relative paths from the directory containing the CLAUDE.md file (not the skill's directory). Flag any that fail as broken imports — they silently do nothing at runtime.
 
 Present scorecards for all files before moving to recommendations.
 
@@ -138,7 +140,7 @@ After edits: **sanity check** — "Did any change make the file longer without m
 
 Show a brief summary: what was removed, added, reorganized.
 
-**Tip to share after edits:** Press `#` at the start of any Claude Code session to have Claude auto-incorporate session learnings back into CLAUDE.md. For personal preferences that shouldn't be shared with the team, use `CLAUDE.local.md` (add to `.gitignore`).
+**Tip to share after edits:** During any Claude Code session, press `#` to have Claude auto-incorporate session learnings back into CLAUDE.md. For personal preferences that shouldn't be shared with the team, use `CLAUDE.local.md` (add to `.gitignore`).
 
 ---
 

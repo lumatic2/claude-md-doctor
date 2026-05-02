@@ -36,7 +36,7 @@ Point it at a specific project:
 /claude-md-doctor ~/projects/my-project/
 ```
 
-Claude will ask whether you want a **Quick Check** (top 3 issues, ~3 min) or a **Full Audit** (~10 min).
+Claude defaults to **Quick Check** (top 3 issues, ~3 min). Say "full audit" for the complete 10-minute review.
 
 ---
 
