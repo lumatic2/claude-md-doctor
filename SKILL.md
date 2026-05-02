@@ -152,7 +152,20 @@ If the user agrees, do the following:
    scripts/deploy.sh            → 6-step procedure from lines 134–145
    ```
 
-3. Ask: "Apply this split?" — only edit files on explicit confirmation. Create the `.claude/rules/` files with proper YAML frontmatter (`paths:` key), then trim root CLAUDE.md to the anchor content.
+3. Ask: "Apply this split?" — only edit files on explicit confirmation. Create the `.claude/rules/` files with this exact frontmatter format at the top, then trim root CLAUDE.md to the anchor content:
+
+   ```markdown
+   ---
+   paths:
+     - "**/*.py"
+     - "tests/**"
+   ---
+
+   # Python Rules
+   - (rules go here)
+   ```
+
+   The `---` block is the frontmatter — Claude Code reads it to decide when to load this file. Without it, the file loads on every session (same as CLAUDE.md). With `paths:`, it only loads when Claude is working with matching files.
 
 ---
 
