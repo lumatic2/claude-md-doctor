@@ -198,6 +198,18 @@ Advisory-only (no hook): L45 — add PreToolUse on `git push`, or accept best-ef
 
 Don't auto-decide the mapping. Surface it and let the user confirm.
 
+For each advisory-only rule, include a ready-to-paste JSON snippet so the user doesn't need to look up the settings.json schema:
+
+```json
+// Add to .claude/settings.json → "hooks"
+"PreToolUse": [{
+  "matcher": "Bash",
+  "hooks": [{"type": "command", "command": "echo 'Blocked: never force push' && exit 1"}]
+}]
+```
+
+Tailor the `matcher` (tool name: `Bash`, `Write`, `Edit`, …) and `command` to the specific rule. For rules that should block rather than warn, use `exit 1`. For audit-only, use `exit 0` with a log message.
+
 #### 6b: Permissions Audit
 
 Extract the `"permissions"` key (or `"allow"` / `"deny"` depending on settings version). Check:
