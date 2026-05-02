@@ -207,6 +207,9 @@ These are severe enough to cap the grade regardless of other scores:
 
 ## Scoring Notes
 
-- If a section is genuinely N/A for the project type (e.g., "Key Commands" for a docs-only repo), redistribute those points to the Rationale section.
+**N/A sections:** If a section is genuinely N/A (e.g., "Key Commands" for a docs-only repo), exclude it from the total and rescale: `adjusted score = raw score / (100 − skipped pts) × 100`. Do not add skipped points to other sections — that inflates scores unpredictably.
+
+**Score floor and ceiling:** Final score is always clamped to `[0, 100]`. Red flag deductions (−10 pts each) apply after section scoring; they cannot push the total below 0.
+
 - Score based on actual effectiveness, not intent. "We tried to document the stack" doesn't earn points if the documentation is vague.
 - When uncertain between two score levels, pick the lower one and note why — it's better to surface issues than hide them.

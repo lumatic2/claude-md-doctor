@@ -36,7 +36,7 @@ Default to **Quick Check** if the user gives no signal either way. Offer to go d
 
 **Always announce the chosen mode before Step 1** — say "Running Quick Check" or "Running Full Audit" so the user knows what to expect.
 
-If no CLAUDE.md is found at all → skip to **[No File Found](#no-file-found)** at the bottom.
+If no root or global CLAUDE.md is found → skip to **[No File Found](#no-file-found)** at the bottom. (Quick Check does not scan subdirectories — a subdirectory-only repo will appear empty in this mode. Tell the user: "No root-level CLAUDE.md found. Run Full Audit to check subdirectories.")
 
 ---
 
@@ -93,7 +93,9 @@ Top 3 issues: [with line numbers]
 Top 3 strengths: [with line numbers]
 ```
 
-**@import validation:** For every `@path/to/file` found in the CLAUDE.md, attempt to Read the target path. Resolve relative paths from the directory containing the CLAUDE.md file (not the skill's directory). Flag any that fail as broken imports — they silently do nothing at runtime.
+**@import validation:** For every `@path/to/file` found in the CLAUDE.md:
+1. Attempt to Read the target path. Resolve relative paths from the directory containing the CLAUDE.md file. Flag failures as broken imports — they silently do nothing at runtime.
+2. For each resolved import, perform a lightweight audit of the imported file: slot count (does it blow the budget?), any obvious stale facts, any contradictions with the parent file's rules. If you skip this, mark the parent file's score as **provisional** and note: "Import content not audited — score may be optimistic."
 
 Present scorecards for all files before moving to recommendations.
 
