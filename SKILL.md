@@ -49,8 +49,8 @@ Use the Read and Glob tools — do NOT use shell commands like `find`, `ls`, or 
 Resolve the project root, then check these paths with the Read tool. Note which exist:
 
 **Project-level (check all, substituting the resolved root):**
-- `<root>/CLAUDE.md`
-- `<root>/CLAUDE.local.md`
+- `<root>/CLAUDE.md` — shared with team (checked into git)
+- `<root>/CLAUDE.local.md` — personal overrides (gitignored, not shared)
 - `<root>/.claude/CLAUDE.md`
 - `<root>/.claude/rules/` (use Glob: `<root>/.claude/rules/*.md`)
 
@@ -129,6 +129,8 @@ Edit in place. Don't rewrite unless asked — surgical edits preserve intent.
 After edits: **sanity check** — "Did any change make the file longer without making it clearer? If yes, those edits went too far — revert them."
 
 Show a brief summary: what was removed, added, reorganized.
+
+**Tip to share after edits:** Press `#` at the start of any Claude Code session to have Claude auto-incorporate session learnings back into CLAUDE.md. For personal preferences that shouldn't be shared with the team, use `CLAUDE.local.md` (add to `.gitignore`).
 
 ---
 

@@ -70,12 +70,14 @@ Examples of linter's work: indentation, import ordering, semicolons, unused vari
 
 ## Section 3: Structure & Completeness (25 points)
 
-### 3.1 Key commands present (5 pts)
+### 3.1 Key commands present and current (5 pts)
 The file should document how to run, test, build, and lint the project. Claude shouldn't have to guess.
 
-- 5 pts: All relevant commands documented (`dev`, `test`, `build`, `lint` or equivalents)
-- 3 pts: Most commands present, 1–2 missing
-- 1 pt: Only some commands
+Commands must also be **current** — a stale command is worse than no command (false confidence). If you can verify one command quickly, do it.
+
+- 5 pts: All relevant commands documented and current (`dev`, `test`, `build`, `lint` or equivalents)
+- 3 pts: Most commands present, 1–2 missing or one likely stale
+- 1 pt: Only some commands, or commands that look outdated
 - 0 pts: No commands (or a static website/docs-only project where N/A)
 
 Score N/A (skip, don't penalize) if the project has no runnable commands.
