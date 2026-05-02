@@ -81,21 +81,10 @@ Lead with a **checklist**, not a number — the findings are more actionable tha
 ```
 ### ~/.claude/CLAUDE.md — Grade B
 
-Objective checks (reliable):
-[✓] File length: 95 lines (under 200 limit)
-[✓] No style/formatting rules present
-[✓] Key commands documented
-[✗] Multi-step procedure found (line 34) → move to a skill or script
-[✓] @imports: all 2 import paths resolve (verified with Read tool)
+Objective:  [✓] length OK  [✗] multi-step procedure (line 34)  [✓] @imports resolve
+Subjective: [~] rationale ~50%  [~] 2 vague rules  [✓] organization OK
 
-Subjective checks (±5–10 pts depending on model):
-[~] Rationale coverage: ~50% of non-obvious rules have a WHY
-[~] Specificity: 2 rules too vague to verify independently
-[✓] Organization: critical rules appear early
-
-Score: 80/100 (B) — treat as rough quartile, not precise measurement
-Note: subjective criteria (rationale, specificity) vary ±5–10 pts across model versions.
-
+Score: 80/100 (B) — rough quartile, not precise (subjective criteria ±5–10 pts)
 Top 3 issues: [with line numbers]
 Top 3 strengths: [with line numbers]
 ```
@@ -157,21 +146,10 @@ If the user agrees, do the following:
 
 2. **Propose the split** (don't apply yet):
    ```
-   Proposed architecture:
-   
-   CLAUDE.md (keep — ~60 lines)
-     → Tech stack, key commands, gotchas, critical cross-cutting rules
-   
-   .claude/rules/python.md  (extract — 18 rules)
-     paths: ['**/*.py', 'tests/**']
-     → Python-specific conventions, pytest patterns
-   
-   .claude/rules/frontend.md  (extract — 12 rules)
-     paths: ['src/components/**', '**/*.tsx']
-     → React conventions, styling rules
-   
-   scripts/deploy.sh  (extract — 1 procedure)
-     → The 6-step deploy procedure currently on lines 134–145
+   CLAUDE.md (~60 lines)        → tech stack, key commands, gotchas, cross-cutting rules
+   .claude/rules/python.md      paths: ['**/*.py', 'tests/**']         → 18 rules
+   .claude/rules/frontend.md    paths: ['src/components/**', '**/*.tsx'] → 12 rules
+   scripts/deploy.sh            → 6-step procedure from lines 134–145
    ```
 
 3. Ask: "Apply this split?" — only edit files on explicit confirmation. Create the `.claude/rules/` files with proper YAML frontmatter (`paths:` key), then trim root CLAUDE.md to the anchor content.
@@ -199,21 +177,10 @@ If no settings.json found at either path: note this and skip the cross-reference
 Extract hooks from the `"hooks"` key. Then identify **enforcement rules** in the CLAUDE.md files — rules containing "always", "never", "must", "before", "after", or Korean equivalents "항상", "반드시", "금지", "절대".
 
 ```
-Hooks found:
-- PreToolUse / Bash → scripts/run_tests.sh
-- PostToolUse / Write → scripts/lint.sh
-
-Enforcement rules in CLAUDE.md:
-- "Run tests before every commit" (line 23)
-- "Lint after file edits" (line 31)
-- "Never push directly to main" (line 45)
-
-Redundant (hook covers it — safe to prune from CLAUDE.md):
-- Line 23 ↔ PreToolUse hook
-- Line 31 ↔ PostToolUse hook
-
-Advisory-only (no hook — best-effort only):
-- Line 45: no hook found. Add a PreToolUse hook on `git push`, or accept best-effort.
+Hooks: PreToolUse/Bash → run_tests.sh  |  PostToolUse/Write → lint.sh
+Rules: "Run tests before commit" (L23)  |  "Lint after edits" (L31)  |  "Never push to main" (L45)
+Redundant → confirm and prune: L23 ↔ PreToolUse, L31 ↔ PostToolUse
+Advisory-only (no hook): L45 — add PreToolUse on `git push`, or accept best-effort
 ```
 
 Don't auto-decide the mapping. Surface it and let the user confirm.
@@ -228,13 +195,9 @@ Extract the `"permissions"` key (or `"allow"` / `"deny"` depending on settings v
 
 Report as:
 ```
-Permissions:
-- Allow: Bash(git *), Read(*), Write(src/**)
-- Deny: Bash(rm -rf *)
-
-Observations:
-- CLAUDE.md documents deploy workflow using `npm publish` — not in allow-list (will prompt every run)
-- No deny on `git push --force` — CLAUDE.md says "never force push" but nothing enforces it
+Allow: Bash(git *), Read(*), Write(src/**)   Deny: Bash(rm -rf *)
+Gap: `npm publish` in CLAUDE.md deploy workflow — not in allow-list (will prompt every run)
+Gap: no deny on `git push --force` — "never force push" rule has no enforcement
 ```
 
 #### 6c: Model Setting
@@ -286,28 +249,22 @@ Ask the user:
 Then offer to create one using this template:
 
 ```markdown
-# [Project Name]
-One-line summary.
+# [Project Name] — one-line summary
 
 ## Tech Stack
-- Language, runtime, key frameworks (with versions)
-- Database, external services
+- Language, runtime, key frameworks (versions), database, external services
 
 ## Key Commands
-- `cmd` — what it does
+- `cmd` — what it does  (dev / test / build / lint)
 
 ## Code Conventions
-- Specific, verifiable rules only
-- Each non-obvious rule gets a one-line "why"
+- Specific, verifiable rules only — each non-obvious rule gets a one-line "why"
 
 ## Workflow
 - Branch naming, PR requirements, commit style
 
 ## Gotchas
 - Non-obvious behaviors, required env vars, known quirks
-
-## External Resources
-@path/to/detailed-docs.md
 ```
 
 Start minimal. Add rules only when Claude makes a mistake that a rule would have prevented — not speculatively.
