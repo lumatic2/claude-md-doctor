@@ -65,6 +65,10 @@ Resolve the project root, then check these paths with the Read tool. Note which 
 
 **Subdirectories (Full Audit only):**
 - Use Glob pattern `<root>/**/CLAUDE.md`, skip `.git/`
+- For each subdirectory file found, answer before scoring: **"Should this be a `.claude/rules/` file instead?"**
+  - Rules apply only to files in that directory → yes, `.claude/rules/` + `paths:` is cleaner (centrally managed, visible in one place)
+  - Content is directory-specific context Claude needs when *entering* that directory → keep as subdirectory CLAUDE.md
+  - Flag candidates for migration. Don't auto-migrate — confirm with user first.
 
 Tell the user which files you found and what scope each covers (global / project / subdirectory / personal-only).
 
@@ -251,15 +255,21 @@ Report as line-level observations, not a score.
 
 If no external agent is available: say so explicitly ("No external agent configured — skipping independent review"), then note which findings from the internal audit are most likely to be blind spots (rules Claude already follows by default). The user can always paste the CLAUDE.md into a fresh Claude session manually and run the prompt above.
 
-### Step 8: Spot-Check Compliance (Optional)
+### Step 8: Default Behavior Test (Optional)
 
-To partially bridge the gap between "rule looks good" and "rule is actually followed":
+More reliable than introspection. For 3–5 enforcement rules, construct a concrete scenario and predict behavior without the rule:
 
-For 3–5 enforcement rules, ask yourself (honestly): *"In a realistic scenario where this rule applies, would I have followed it anyway — even without CLAUDE.md?"*
+> "If a user asks me to [specific action], and this rule didn't exist, I would [predicted behavior]."
 
-Rules where the honest answer is "yes, probably" are candidates for pruning. They document Claude's defaults, not behavioral changes.
+- **Prediction matches rule** → rule is documenting a default. Candidate for pruning (or keep as onboarding docs — mark explicitly).
+- **Prediction differs from rule** → rule is load-bearing. Keep.
 
-Share findings with the user: "These rules appear to match my defaults — they may not be changing my behavior. Worth keeping for documentation, or safe to remove?"
+Example:
+> Rule: "Never use `console.log` in production — use the logger module."
+> Without rule: I'd use `console.log` (natural choice for quick debug output).
+> Verdict: load-bearing — keep.
+
+Share results: "X/5 rules appear to match my defaults and may not be changing behavior."
 
 ---
 

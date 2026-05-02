@@ -12,7 +12,20 @@ Higher scores = more effective instructions.
 **What is the instruction budget?**
 Claude Code's system prompt consumes ~50 instruction slots before your CLAUDE.md is even read. The total capacity is roughly 150 slots, leaving ~100 usable slots for your instructions. A "slot" is not a line — it's one discrete constraint Claude must hold in working memory (a rule, a prohibition, a workflow step, a fact).
 
-**How to count:** Scan each section. Count distinct things Claude must remember and act on — not headers, comments, or rationale text. A five-line code block that illustrates one rule = 1 slot. A one-line "always use pnpm" = 1 slot.
+**How to count (mechanical algorithm):**
+
+Count as **1 slot each:**
+- Bullet containing a behavioral verb: use, don't, always, never, run, prefer, avoid, must, should not
+- Sentence with an imperative or modal: "Run tests before…", "Never commit…", "Must have…"
+- Any named fact Claude must recall: a URL, version number, tool name, environment variable
+- A code block (whole block = 1 slot regardless of length — it illustrates one convention)
+
+Count as **0 slots:**
+- Section headers, blank lines, horizontal rules
+- Rationale text ("because…", "why:…", "reason:…") — these help Claude generalize but don't add new constraints
+- Examples that illustrate an already-counted rule
+
+Calibration: `"Use pnpm not npm — workspaces require it"` = 1 slot (the rationale is 0, the rule is 1). A 10-line code example showing one pattern = 1 slot.
 
 | Budget used | Score | What it means |
 |---|---|---|
