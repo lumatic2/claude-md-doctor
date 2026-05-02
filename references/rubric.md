@@ -146,15 +146,15 @@ Multi-step workflows (deploy, release, data migration) belong in skills or scrip
 - 2 pts: 1 procedure (minor)
 - 0 pts: 2+ procedures or any critical workflow embedded as prose
 
-### 4.1b Hook alignment (bonus check — not scored, but always report)
-This is reported separately from the numeric score because it requires reading settings.json, not just the CLAUDE.md.
+### 4.1b Hook alignment (bonus check — not scored, Full Audit only)
+This check requires reading settings.json (Step 6), so it only runs in Full Audit mode. Do not attempt it during Quick Check — settings.json hasn't been read yet.
 
 For each enforcement rule (contains "always", "never", "must", "before", "after" or Korean equivalents "항상", "반드시", "금지"):
 - **Redundant**: rule exists in CLAUDE.md AND a matching hook enforces it → safe to prune from CLAUDE.md
 - **Advisory-only**: rule exists in CLAUDE.md but no hook → flag clearly, suggest adding hook or accepting best-effort
 - **Hook without mention**: hook exists but CLAUDE.md doesn't reference the constraint → consider adding a note so Claude understands the system
 
-Report these as a separate "Hook Cross-Reference" section, not folded into the score.
+Report these as a separate "Hook Cross-Reference" section (Step 6a), not folded into the score.
 
 ### 4.2 Imports used for large reference material (5 pts)
 If the file links to or summarizes large documents (API specs, style guides, architecture docs), use `@path/to/file` imports so Claude can load them on demand.

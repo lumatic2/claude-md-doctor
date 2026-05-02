@@ -27,7 +27,7 @@ CLAUDE.md is a persistent memory file that Claude Code reads at every session st
 Before diving in, ask the user (or infer from context):
 
 **Quick Check** — "Just tell me the biggest problems" (2–3 min)
-→ Run Steps 1–3 only. Surface top 3 issues, skip hook analysis and optional steps.
+→ Run Steps 1–4 only (Step 4 lightweight: P0 issues + top 3 P1s). Skip Steps 6–8.
 
 **Full Audit** — "Do a thorough review" (5–10 min)
 → Run all steps. Include hook cross-reference, optional external audit offer, and spot-check.
@@ -64,7 +64,7 @@ Resolve the project root, then check these paths with the Read tool. Note which 
 - `~/.claude/CLAUDE.md`
 
 **Subdirectories (Full Audit only):**
-- Use Glob pattern `<root>/**/CLAUDE.md`, skip `.git/`
+- Use Glob pattern `<root>/**/CLAUDE.md`, skip `.git/`. Exclude files already found in the project-level check above (root, `.claude/`) — don't double-score them.
 - For each subdirectory file found, answer before scoring: **"Should this be a `.claude/rules/` file instead?"**
   - Rules apply only to files in that directory → yes, `.claude/rules/` + `paths:` is cleaner (centrally managed, visible in one place)
   - Content is directory-specific context Claude needs when *entering* that directory → keep as subdirectory CLAUDE.md
@@ -144,8 +144,8 @@ Say: *"The file is still [N] lines. Want me to propose a modular split? I'll map
 If the user agrees, do the following:
 
 1. **Group rules by scope** — scan each rule and classify:
-   - Applies only to specific file types (`.py`, `.ts`, `*.test.*`) → candidate for `paths:`-scoped rule file
-   - Applies only in specific directories (`src/`, `scripts/`) → candidate for subdirectory CLAUDE.md
+   - Applies only to specific file types (`.py`, `.ts`, `*.test.*`) → `.claude/rules/` with `paths:` scoping
+   - Applies only in specific directories (`src/`, `scripts/`) → `.claude/rules/` with `paths:` scoping (preferred over subdirectory CLAUDE.md — easier to manage centrally)
    - Applies everywhere, always → stays in root CLAUDE.md
 
 2. **Propose the split** (don't apply yet):
