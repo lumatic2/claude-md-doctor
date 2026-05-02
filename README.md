@@ -8,11 +8,17 @@ Most `CLAUDE.md` files fall into one of three failure modes: too long (context c
 
 ## Install
 
+**macOS / Linux / Windows (PowerShell or WSL):**
 ```bash
 git clone https://github.com/lumatic2/claude-md-doctor ~/.claude/skills/claude-md-doctor
 ```
 
-No setup script needed. Works on macOS, Linux, and Windows (WSL or PowerShell).
+**Windows (Command Prompt)** — `~` is not expanded in CMD, use the full path:
+```cmd
+git clone https://github.com/lumatic2/claude-md-doctor %USERPROFILE%\.claude\skills\claude-md-doctor
+```
+
+No setup script needed.
 
 ---
 

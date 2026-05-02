@@ -34,6 +34,8 @@ Before diving in, ask the user (or infer from context):
 
 Default to **Quick Check** if the user gives no signal either way. Offer to go deeper after showing initial findings.
 
+**Always announce the chosen mode before Step 1** — say "Running Quick Check" or "Running Full Audit" so the user knows what to expect.
+
 If no CLAUDE.md is found at all → skip to **[No File Found](#no-file-found)** at the bottom.
 
 ---
@@ -45,6 +47,8 @@ If no CLAUDE.md is found at all → skip to **[No File Found](#no-file-found)** 
 Use the Read and Glob tools — do NOT use shell commands like `find`, `ls`, or `cat`. These are unreliable across platforms (Windows/Mac/Linux).
 
 **If the user provided a path in their message** (absolute or relative), use that as the project root. Do not fall back to the current working directory — the skill may be invoked from a different directory than the target project.
+
+**Tell the user the resolved root immediately:** "Scanning project root: `{resolved path}`"
 
 Resolve the project root, then check these paths with the Read tool. Note which exist:
 
@@ -80,6 +84,7 @@ Objective checks (reliable):
 [✓] No style/formatting rules present
 [✓] Key commands documented
 [✗] Multi-step procedure found (line 34) → move to a skill or script
+[✓] @imports: all 2 import paths resolve (verified with Read tool)
 
 Subjective checks (±5–10 pts depending on model):
 [~] Rationale coverage: ~50% of non-obvious rules have a WHY
@@ -87,10 +92,13 @@ Subjective checks (±5–10 pts depending on model):
 [✓] Organization: critical rules appear early
 
 Score: 80/100 (B) — treat as rough quartile, not precise measurement
+Note: subjective criteria (rationale, specificity) vary ±5–10 pts across model versions.
 
 Top 3 issues: [with line numbers]
 Top 3 strengths: [with line numbers]
 ```
+
+**@import validation:** For every `@path/to/file` found in the CLAUDE.md, attempt to Read the target path. Flag any that fail as broken imports — they silently do nothing at runtime.
 
 Present scorecards for all files before moving to recommendations.
 
@@ -190,7 +198,7 @@ Review this CLAUDE.md. For each rule, assess:
 Report as line-level observations, not a score.
 ```
 
-If no external agent is available, note the limitation and proceed.
+If no external agent is available: say so explicitly ("No external agent configured — skipping independent review"), then note which findings from the internal audit are most likely to be blind spots (rules Claude already follows by default). The user can always paste the CLAUDE.md into a fresh Claude session manually and run the prompt above.
 
 ### Step 8: Spot-Check Compliance (Optional)
 
