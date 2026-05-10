@@ -1,6 +1,6 @@
 ---
 name: claude-md-doctor
-description: Audit and optimize CLAUDE.md files against official Anthropic guidelines and community best practices. Use this skill whenever the user wants to review, improve, diagnose, or refactor their CLAUDE.md (memory file) — whether they say "check my CLAUDE.md", "is my CLAUDE.md good", "optimize my memory file", "audit claude instructions", or similar. Also trigger proactively after helping someone set up a new project or write their first CLAUDE.md.
+description: CLAUDE.md 감사·최적화. /claude-md-doctor 호출 시 사용.
 ---
 
 # CLAUDE.md Doctor
