@@ -18,7 +18,7 @@ CLAUDE.md is a persistent memory file that Claude Code reads at every session st
 - Survives `/compact` if in project root
 - Hierarchical: global (`~/.claude/CLAUDE.md`) → project root (`./CLAUDE.md`) → subdirectories (lazy-loaded)
 - Personal sandbox: `CLAUDE.local.md` (gitignored, not shared with team)
-- Imports: use `@path/to/file` to pull in external docs
+- Imports: `@path/to/file` pulls in external docs **eagerly** — loaded in full at every session start, counts against the token budget (NOT lazy). Relocating bloat into an `@import` does not reduce session tokens.
 
 ---
 
@@ -329,7 +329,10 @@ Start minimal. Add rules only when Claude makes a mistake that a rule would have
 ## Diagnosis Patterns
 
 **The Bloat Problem** — File is long but Claude ignores rules or asks questions the file already answers.
-Fix: cut to < 200 lines. Move details to `@imports` or `.claude/rules/` with `paths:` scoping.
+Fix: cut to < 200 lines. To actually reduce session tokens, move details to `.claude/rules/` with `paths:` scoping (lazy — loads only when Claude touches matching files) or a plain-text path the model reads on demand. NOTE: `@imports` do NOT help — they are eager (loaded in full every session), so an `@import` keeps the same token cost. Reserve `@import` for content that must always be in context.
+
+**The Eager Import Illusion** — CLAUDE.md is trimmed by moving sections into `@import`ed files, but session token usage doesn't drop.
+Fix: `@import` is eager. Verified empirically — a sentinel value in an `@import`ed file is answerable with tools disabled (it's in context); the same value behind a plain-path reference is not. To cut tokens, demote to `.claude/rules/` with `paths:` (lazy) or a plain-text path read on demand — not `@import`.
 
 **The Vague Rule** — "Use proper error handling." Claude does something; user says that's not what they meant.
 Fix: make it concrete and verifiable. Add why.
