@@ -72,6 +72,8 @@ Resolve the project root, then check these paths with the Read tool. Note which 
 - `~/.claude/CLAUDE.md` (Claude global) — also check `~/CLAUDE.md` when home is an ancestor of the cwd: it loads as an ancestor project file, and on some setups the real global brief lives there while `~/.claude/CLAUDE.md` is empty
 - `~/.codex/AGENTS.md` (Codex CODEX_HOME global). If `~/AGENTS.md` exists, flag it as retired stale state, not as a required Codex global.
 
+**Global scoring policy (when the audit target is a project, not the global itself):** default to scoring globals as **scope-context only** — read them to catch project↔global contradictions and cross-agent drift, but do NOT produce a full scorecard for them in a project-scoped run (their rules apply everywhere, so they deserve a dedicated pass). Exception: if the user pointed the audit at the global path itself, score it fully. Whichever you choose, state it explicitly in the discovery summary — never silently drop a global you found.
+
 **Subdirectories (Full Audit only):**
 - Use Glob patterns `<root>/**/CLAUDE.md` and `<root>/**/AGENTS.md`, skip `.git/`. Exclude files already found in the project-level check above — don't double-score them.
 - For each subdirectory file found, answer before scoring: **"Should this be a `.claude/rules/` file instead?"**
@@ -79,7 +81,7 @@ Resolve the project root, then check these paths with the Read tool. Note which 
   - Content is directory-specific context Claude needs when *entering* that directory → keep as subdirectory CLAUDE.md
   - Flag candidates for migration. Don't auto-migrate — confirm with user first.
 
-Tell the user which files you found, tagging each by **agent** (Claude / Codex) and **scope** (global / project / subdirectory / personal-only).
+Tell the user which files you found, tagging each by **agent** (Claude / Codex) and **scope** (global / project / subdirectory / personal-only). For any global file you treated as scope-context only (not scored), say so on its row and, at the end of the run, offer a standalone global audit (`/context-doctor ~/.claude/CLAUDE.md`) — a global brief that is never scored stays an unaudited blind spot.
 
 ### Step 2: Load the Scoring Rubric
 
