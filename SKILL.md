@@ -218,7 +218,7 @@ Read these files with the Read tool (do NOT use shell commands):
 - `~/.claude/settings.json` (global config)
 - `.claude/settings.json` (project config, if present)
 
-If no settings.json found at either path: note this and skip the cross-reference sections below. Suggest creating `.claude/settings.json` to unlock deterministic enforcement.
+If only the project `.claude/settings.json` is missing but `~/.claude/settings.json` exists: global hooks/permissions still apply to the project, so **fall back to the global config** for the cross-reference below (note in the report that the enforcement is global, not project-scoped). Only skip the cross-reference entirely when neither path exists. When the project settings.json is absent, suggest creating one to unlock project-scoped deterministic enforcement.
 
 #### 6a: Hook Cross-Reference
 
