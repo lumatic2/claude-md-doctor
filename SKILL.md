@@ -1,24 +1,29 @@
 ---
-name: claude-md-doctor
-description: CLAUDE.md 감사·최적화. /claude-md-doctor 호출 시 사용.
+name: context-doctor
+description: CLAUDE.md·AGENTS.md context 위계 감사·최적화 + cross-agent drift 점검. /context-doctor 호출 시 사용.
 ---
 
-# CLAUDE.md Doctor
+# Context Doctor
 
-A skill for auditing CLAUDE.md files and improving them to production quality.
+A skill for auditing agent instruction files — **CLAUDE.md** (Claude Code) and **AGENTS.md** (Codex) — and improving them to production quality.
 
-The goal is to make CLAUDE.md files that are concise, actionable, and actually change Claude's behavior — not documentation for humans.
+The goal is to make instruction files that are concise, actionable, and actually change the agent's behavior — not documentation for humans. The same rubric applies to both; when both exist, the unique value is catching **cross-agent drift** (the two files mirror each other but diverge over time).
 
-## What is CLAUDE.md?
+## What are CLAUDE.md and AGENTS.md?
 
-CLAUDE.md is a persistent memory file that Claude Code reads at every session start. It lives in your project or home directory and contains instructions, conventions, and context that don't change frequently. Think of it as the standing brief you'd give a new team member who already knows how to code.
+Both are persistent instruction files an agent reads at every session start. They live in your project or home directory and hold conventions and context that don't change frequently — the standing brief you'd give a new teammate who already knows how to code.
 
-**Key properties:**
-- Loaded in full at session start (consumes tokens)
-- Survives `/compact` if in project root
-- Hierarchical: global (`~/.claude/CLAUDE.md`) → project root (`./CLAUDE.md`) → subdirectories (lazy-loaded)
+**CLAUDE.md (Claude Code) hierarchy:**
+- global (`~/.claude/CLAUDE.md`) → project root (`./CLAUDE.md`) → subdirectories (lazy-loaded)
 - Personal sandbox: `CLAUDE.local.md` (gitignored, not shared with team)
-- Imports: `@path/to/file` pulls in external docs **eagerly** — loaded in full at every session start, counts against the token budget (NOT lazy). Relocating bloat into an `@import` does not reduce session tokens.
+- Imports: `@path/to/file` pulls in docs **eagerly** — loaded in full every session, counts against the token budget (NOT lazy). Relocating bloat into an `@import` does not reduce session tokens.
+
+**AGENTS.md (Codex) hierarchy:**
+- global (`~/.codex/AGENTS.md`, the CODEX_HOME file) and home (`~/AGENTS.md`) → project root (`<root>/AGENTS.md`) → nested subdirectory `AGENTS.md` (Codex merges walking up from the cwd)
+- Both `~/.codex/AGENTS.md` and `~/AGENTS.md` may load — verify on the target machine rather than assuming only one (double-load risk: the same brief injected twice).
+- **No `@import`, no hooks/settings layer.** Codex has no deterministic enforcement equivalent — every "always/never" rule in AGENTS.md is *advisory-only*. This makes specificity and brevity matter more, not less.
+
+**Shared:** loaded in full at session start (consume tokens), survive compaction if in project root, hierarchical (global → project → subdirectory).
 
 ---
 
@@ -61,18 +66,20 @@ Resolve the project root, then check these paths with the Read tool. Note which 
 - `<root>/CLAUDE.local.md` — personal overrides (gitignored, not shared)
 - `<root>/.claude/CLAUDE.md`
 - `<root>/.claude/rules/` (use Glob: `<root>/.claude/rules/*.md`)
+- `<root>/AGENTS.md` — Codex project instructions (checked into git)
 
 **Global (user-level — always check regardless of root):**
-- `~/.claude/CLAUDE.md`
+- `~/.claude/CLAUDE.md` (Claude global) — also check `~/CLAUDE.md` when home is an ancestor of the cwd: it loads as an ancestor project file, and on some setups the real global brief lives there while `~/.claude/CLAUDE.md` is empty
+- `~/.codex/AGENTS.md` (Codex CODEX_HOME global) and `~/AGENTS.md` (Codex home) — note if BOTH exist (double-load candidate)
 
 **Subdirectories (Full Audit only):**
-- Use Glob pattern `<root>/**/CLAUDE.md`, skip `.git/`. Exclude files already found in the project-level check above (root, `.claude/`) — don't double-score them.
+- Use Glob patterns `<root>/**/CLAUDE.md` and `<root>/**/AGENTS.md`, skip `.git/`. Exclude files already found in the project-level check above — don't double-score them.
 - For each subdirectory file found, answer before scoring: **"Should this be a `.claude/rules/` file instead?"**
   - Rules apply only to files in that directory → yes, `.claude/rules/` + `paths:` is cleaner (centrally managed, visible in one place)
   - Content is directory-specific context Claude needs when *entering* that directory → keep as subdirectory CLAUDE.md
   - Flag candidates for migration. Don't auto-migrate — confirm with user first.
 
-Tell the user which files you found and what scope each covers (global / project / subdirectory / personal-only).
+Tell the user which files you found, tagging each by **agent** (Claude / Codex) and **scope** (global / project / subdirectory / personal-only).
 
 ### Step 2: Load the Scoring Rubric
 
@@ -129,6 +136,20 @@ P2   —      no Gotchas section                 add env vars, known quirks
 P0 = hurts effectiveness today (contradictions, 200+ lines, rules too vague to follow)
 P1 = meaningfully improves adherence (missing rationale, unhooked rules, procedures, stale facts)
 P2 = polish (reorder, @imports, missing sections, global/project split)
+
+### Step 4b: Cross-Agent Drift Check (when both CLAUDE.md and AGENTS.md exist at the same scope)
+
+Many setups keep CLAUDE.md and AGENTS.md as a canonical + mirror pair. Over time they drift. When both exist (global or project), compare them and report:
+
+```
+Cross-Agent Drift  (project: CLAUDE.md ↔ AGENTS.md)
+  ONLY IN CLAUDE.md    L40  "/codex 교차검증" workflow        → mirror to AGENTS.md or mark Claude-only
+  ONLY IN AGENTS.md    L22  sandbox/approval policy           → Codex-specific, OK to omit from CLAUDE.md
+  CONTRADICTION        L15  "commit freely" vs "never commit w/o ask" → resolve explicitly
+  DUPLICATED VERBATIM  60 lines identical                     → keep one canonical + a pointer
+```
+
+Don't auto-sync. Surface the diff and let the user decide what's intentionally agent-specific vs accidental drift. Agent-specific content (Codex sandbox/approval rules, Claude hook references) is *expected* to differ — flag it as informational, not an error.
 
 ### Step 5: Apply Changes
 
@@ -187,7 +208,9 @@ If the user agrees, do the following:
 
 Only run these steps in Full Audit mode, or if the user explicitly asks for them.
 
-### Step 6: Config System Audit
+### Step 6: Config System Audit (Claude only)
+
+**This step is Claude-specific.** Codex has no hooks/permissions/settings.json layer — every enforcement rule in AGENTS.md is advisory-only (flag them as such; there's no hook to delegate to). Skip this step for AGENTS.md-only audits.
 
 CLAUDE.md is only one layer of the Claude Code config system. The other layers — hooks, permissions, model selection — interact with CLAUDE.md rules and often make them redundant or reveal gaps. Audit all three together.
 
@@ -372,7 +395,7 @@ Opus 4.7 tends to be stricter on rationale than Sonnet 4.6. Trust line-level fin
 - Under 150 lines (< 200 for complex projects)
 - Every rule passes: "would removing this cause Claude to make a mistake?"
 - Non-obvious rules have a one-line rationale
-- Enforcement rules either have a hook or are explicitly marked advisory-only
+- Enforcement rules either have a hook (Claude) or are explicitly marked advisory-only (always the case for AGENTS.md — no hook layer)
 - No stale facts, no multi-step procedures, no linter's work
 - Critical instructions appear early
 

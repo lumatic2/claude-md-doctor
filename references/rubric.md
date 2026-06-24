@@ -1,6 +1,6 @@
-# CLAUDE.md Scoring Rubric
+# Context File Scoring Rubric (CLAUDE.md & AGENTS.md)
 
-Score each CLAUDE.md file on a 0–100 scale using the criteria below.
+Score each instruction file (CLAUDE.md or AGENTS.md) on a 0–100 scale using the criteria below. The criteria are agent-agnostic; the only Claude-specific check is 4.1b (Hook alignment), which Codex has no equivalent for.
 Higher scores = more effective instructions.
 
 ---
@@ -146,8 +146,8 @@ Multi-step workflows (deploy, release, data migration) belong in skills or scrip
 - 2 pts: 1 procedure (minor)
 - 0 pts: 2+ procedures or any critical workflow embedded as prose
 
-### 4.1b Hook alignment (bonus check — not scored, Full Audit only)
-This check requires reading settings.json (Step 6), so it only runs in Full Audit mode. Do not attempt it during Quick Check — settings.json hasn't been read yet.
+### 4.1b Hook alignment (bonus check — not scored, Full Audit only, **Claude only**)
+This check applies only to CLAUDE.md — Codex/AGENTS.md has no hooks/settings layer, so every AGENTS.md enforcement rule is advisory-only by definition. It requires reading settings.json (Step 6), so it only runs in Full Audit mode. Do not attempt it during Quick Check — settings.json hasn't been read yet.
 
 For each enforcement rule (contains "always", "never", "must", "before", "after" or Korean equivalents "항상", "반드시", "금지"):
 - **Redundant**: rule exists in CLAUDE.md AND a matching hook enforces it → safe to prune from CLAUDE.md

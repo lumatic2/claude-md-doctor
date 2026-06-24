@@ -1,24 +1,19 @@
-# claude-md-doctor
+# context-doctor
 
-A Claude Code skill that audits your `CLAUDE.md` files and tells you exactly what to fix — and whether your rules are actually changing Claude's behavior.
+A skill that audits your agent instruction files — `CLAUDE.md` (Claude Code) and `AGENTS.md` (Codex) — and tells you exactly what to fix, whether your rules are actually changing the agent's behavior, and where the two files have drifted apart.
 
-Most `CLAUDE.md` files fall into one of three failure modes: too long (context compression drops the end), too vague (two people would implement the rule differently), or full of rules Claude would follow anyway. This skill diagnoses all three and helps you keep only the rules that genuinely work.
+Most instruction files fall into one of three failure modes: too long (context compression drops the end), too vague (two people would implement the rule differently), or full of rules the agent would follow anyway. This skill diagnoses all three across both files and helps you keep only the rules that genuinely work.
+
+> Forked from [`lumatic2/context-doctor`](https://github.com/lumatic2/context-doctor) and extended to cover the Codex AGENTS.md hierarchy + cross-agent drift. Diverged from upstream.
 
 ---
 
 ## Install
 
-**macOS / Linux / Windows (PowerShell or WSL):**
+This repo is the canonical source. Deploy to `~/.claude/skills/context-doctor/`:
 ```bash
-git clone https://github.com/lumatic2/claude-md-doctor ~/.claude/skills/claude-md-doctor
+bash install.sh
 ```
-
-**Windows (Command Prompt)** — `~` is not expanded in CMD, use the full path:
-```cmd
-git clone https://github.com/lumatic2/claude-md-doctor %USERPROFILE%\.claude\skills\claude-md-doctor
-```
-
-No setup script needed.
 
 ---
 
@@ -27,13 +22,13 @@ No setup script needed.
 In any Claude Code session:
 
 ```
-/claude-md-doctor
+/context-doctor
 ```
 
 Point it at a specific project:
 
 ```
-/claude-md-doctor ~/projects/my-project/
+/context-doctor ~/projects/my-project/
 ```
 
 Claude defaults to **Quick Check** (top 3 issues, ~3 min). Say "full audit" for the complete 10-minute review.
@@ -76,7 +71,7 @@ The Full Audit's Hook cross-reference step requires hooks to actually exist. [`h
 
 Together they cover the two sides of Claude Code configuration:
 
-| | hook-manager | claude-md-doctor |
+| | hook-manager | context-doctor |
 |--|--|--|
 | Manage lifecycle hooks | ✓ | — |
 | Audit `CLAUDE.md` rules | — | ✓ |
@@ -89,9 +84,9 @@ Together they cover the two sides of Claude Code configuration:
 
 Anthropic ships an official [`claude-md-improver`](https://github.com/anthropics/claude-plugins-official) plugin. It's good at checking whether your file is practically useful — are the commands right, is the architecture described, are gotchas captured?
 
-`claude-md-doctor` asks a different question: **are your rules actually changing Claude's behavior?**
+`context-doctor` asks a different question: **are your rules actually changing Claude's behavior?**
 
-| | claude-md-improver | claude-md-doctor |
+| | claude-md-improver | context-doctor |
 |--|--|--|
 | Content accuracy (commands, architecture) | ✓ | — |
 | Behavioral verification (removal test) | — | ✓ |
@@ -102,7 +97,7 @@ Anthropic ships an official [`claude-md-improver`](https://github.com/anthropics
 | Cross-platform (no `find`/`bash`) | — | ✓ |
 | Scoring reliability notes | — | ✓ |
 
-They complement each other. Run `claude-md-improver` to check if your content is correct, run `claude-md-doctor` to check if your rules are load-bearing.
+They complement each other. Run `claude-md-improver` to check if your content is correct, run `context-doctor` to check if your rules are load-bearing.
 
 ---
 
