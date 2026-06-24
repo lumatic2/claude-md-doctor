@@ -19,8 +19,8 @@ Both are persistent instruction files an agent reads at every session start. The
 - Imports: `@path/to/file` pulls in docs **eagerly** — loaded in full every session, counts against the token budget (NOT lazy). Relocating bloat into an `@import` does not reduce session tokens.
 
 **AGENTS.md (Codex) hierarchy:**
-- global (`~/.codex/AGENTS.md`, the CODEX_HOME file) and home (`~/AGENTS.md`) → project root (`<root>/AGENTS.md`) → nested subdirectory `AGENTS.md` (Codex merges walking up from the cwd)
-- Both `~/.codex/AGENTS.md` and `~/AGENTS.md` may load — verify on the target machine rather than assuming only one (double-load risk: the same brief injected twice).
+- global (`~/.codex/AGENTS.md`, the CODEX_HOME file) → project root (`<root>/AGENTS.md`) → nested subdirectory `AGENTS.md` (Codex merges walking up from the cwd)
+- `~/AGENTS.md` is retired on this setup. If it exists, report it as stale noise and remove it after confirming `~/.codex/AGENTS.md` is present.
 - **No `@import`, no hooks/settings layer.** Codex has no deterministic enforcement equivalent — every "always/never" rule in AGENTS.md is *advisory-only*. This makes specificity and brevity matter more, not less.
 
 **Shared:** loaded in full at session start (consume tokens), survive compaction if in project root, hierarchical (global → project → subdirectory).
@@ -70,7 +70,7 @@ Resolve the project root, then check these paths with the Read tool. Note which 
 
 **Global (user-level — always check regardless of root):**
 - `~/.claude/CLAUDE.md` (Claude global) — also check `~/CLAUDE.md` when home is an ancestor of the cwd: it loads as an ancestor project file, and on some setups the real global brief lives there while `~/.claude/CLAUDE.md` is empty
-- `~/.codex/AGENTS.md` (Codex CODEX_HOME global) and `~/AGENTS.md` (Codex home) — note if BOTH exist (double-load candidate)
+- `~/.codex/AGENTS.md` (Codex CODEX_HOME global). If `~/AGENTS.md` exists, flag it as retired stale state, not as a required Codex global.
 
 **Subdirectories (Full Audit only):**
 - Use Glob patterns `<root>/**/CLAUDE.md` and `<root>/**/AGENTS.md`, skip `.git/`. Exclude files already found in the project-level check above — don't double-score them.
@@ -139,7 +139,7 @@ P2 = polish (reorder, @imports, missing sections, global/project split)
 
 ### Step 4b: Cross-Agent Drift Check (when both CLAUDE.md and AGENTS.md exist at the same scope)
 
-Many setups keep CLAUDE.md and AGENTS.md as a canonical + mirror pair. Over time they drift. When both exist (global or project), compare them and report:
+Many setups keep parallel CLAUDE.md and AGENTS.md briefs for different agents. Over time they drift. When both exist (global or project), compare them and report:
 
 ```
 Cross-Agent Drift  (project: CLAUDE.md ↔ AGENTS.md)
